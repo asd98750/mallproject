@@ -30,7 +30,8 @@
     mounted() {},
     methods: {
       titleItemClick(index){
-        this.currentIndex = index
+        this.currentIndex = index;
+        this.$emit('titleItemClick', index);
       },
       backClick() {
         this.$router.back()

@@ -22,14 +22,16 @@
         type: Object,
         default () {
           return {
-            counter: 0,
+            
             imagesLength: 0
           }
         }
       }
     },
     data() {
-      return {}
+      return {
+        counter: 0,
+      }
     },
     components: {},
     created() {},
@@ -40,12 +42,13 @@
       detailInfo() {
         //获取图片个数
         this.imagesLength = this.detailInfo.detailImage[0].list.length
+
       }
     },
     methods: {
       imgLoad() {
         //判断图片都加载完了，进行一次回调
-        if (++this.counter === this.imagesLength) {
+        if ( ++this.counter === this.imagesLength) {
           this.$emit('imgLoad')
         }
       },

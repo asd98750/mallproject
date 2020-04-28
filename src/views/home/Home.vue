@@ -3,16 +3,15 @@
     <nav-bar class="home-nav">
       <div slot="center">商店街</div>
     </nav-bar>
-     <tab-control @itemClick="tabClick" class="tab-control-show" v-show="isTabFixed" :titles="['流行', '新款', '精选']" ref="tabControl1" 
-      ></tab-control>
+    <tab-control @itemClick="tabClick" class="tab-control-show" v-show="isTabFixed" :titles="['流行', '新款', '精选']"
+      ref="tabControl1"></tab-control>
     <scroll class="content" ref="scroll" :pull-up-load="true" :probe-type="3" @scroll="contentScroll"
       @pullingUp="loadMore">
       <home-swiper :banners="banners" @swiperImageLoad="swiperImageLoad"></home-swiper>
 
       <recommend-view :recommends="recommends"></recommend-view>
       <feature-view></feature-view>
-      <tab-control @itemClick="tabClick" :titles="['流行', '新款', '精选']" ref="tabControl" 
-      ></tab-control>
+      <tab-control @itemClick="tabClick" :titles="['流行', '新款', '精选']" ref="tabControl"></tab-control>
 
       <goods-list :goods="showGoods"></goods-list>
     </scroll>
@@ -26,8 +25,7 @@
   import TabControl from 'components/content/tabControl/TabControl'
   import GoodsList from 'components/content/goods/GoodsList'
   import Scroll from 'components/common/scroll/Scroll'
-  import BackTop from 'components/content/backtop/BackTop'
-
+ 
   import HomeSwiper from './childComps/HomeSwiper'
   import RecommendView from './childComps/RecommendView'
   import FeatureView from './childComps/FeatureView'
@@ -38,15 +36,23 @@
   } from 'network/home'
 
   import {
+    itemListenerMixin,
+    backTopMixin
+  } from 'common/mixin'
+
+  import {
     debounce
   } from 'common/utils'
 
+
+import {BACK_POSITION} from 'common/const'
   // import Swiper from 'components/common/swiper/Swiper'
   // import SwiperItem from 'components/common/swiper/SwiperItem'
 
 
   export default {
     name: 'Home',
+    mixins: [itemListenerMixin,backTopMixin],
     data() {
       return {
         banners: [],
@@ -66,10 +72,11 @@
           },
         },
         currentType: 'pop',
-        isShow: false,
+        
         tabOffsetTop: 0,
         isTabFixed: false,
-        saveY: 0
+        saveY: 0,
+
       }
     },
     components: {
@@ -77,13 +84,9 @@
       TabControl,
       GoodsList,
       Scroll,
-      BackTop,
       HomeSwiper,
       RecommendView,
       FeatureView,
-
-
-
     },
     created() {
       //1.请求多个数据
@@ -97,11 +100,12 @@
     mounted() {
 
       //3.监听item中图片加载
-      const refresh = debounce(this.$refs.scroll.refresh, 50)
-      this.$bus.$on('itemImageLoad', () => {
-        // console.log('------------');
-        refresh()
-      })
+      // const refresh = debounce(this.$refs.scroll.refresh, 50)
+      // this.ItemImageListener = () => {
+      //   // console.log('------------');
+      //   refresh()
+      // }
+      // this.$bus.$on('itemImageLoad',this.ItemImageListener )
 
     },
     computed: {
@@ -126,13 +130,16 @@
             break
 
         }
-        this.$refs.tabControl1.currentIndex = index;
-        this.$refs.tabControl.currentIndex = index;
+        if (this.currentType !== undefined) {
+          this.$refs.tabControl1.currentIndex = index;
+          this.$refs.tabControl.currentIndex = index;
+        }
+
       },
       contentScroll(position) {
         // console.log(position);
         //判断backtop是否显示
-        this.isShow = (-position.y) > 1000
+        this.listenShowBackTop(position)
         //
         this.isTabFixed = (-position.y) > this.offsetTop
 
@@ -145,11 +152,7 @@
 
       },
 
-      backClick() {
-        // console.log('回到顶部');
-        this.$refs.scroll.scrollTo(0, 0, 500)
-
-      },
+     
       swiperImageLoad() {
         //2.获取tabControl的offsetTop
         //所有的组件都有一个$el 用于获取组件中的元素
@@ -180,16 +183,19 @@
       },
 
     },
-    activated () {
+    activated() {
       // console.log('actived');
       this.$refs.scroll.refresh()
-      this.$refs.scroll.scrollTo(0,this.saveY,0)
-      
-      
+      this.$refs.scroll.scrollTo(0, this.saveY, 0)
+
+
     },
-    deactivated () {
+    deactivated() {
       // console.log('deactived');
       this.saveY = this.$refs.scroll.getScrollY()
+
+      //2.取消全局事件监听
+      this.$bus.$off('itemImageLoad', this.ItemImageListener)
     }
   }
 
@@ -232,9 +238,10 @@
     left: 0;
     right: 0;
   }
-.tab-control-show{
-  position: relative;
-  z-index: 10;
-}
+
+  .tab-control-show {
+    position: relative;
+    z-index: 10;
+  }
 
 </style>
